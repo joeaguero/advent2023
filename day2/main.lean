@@ -1,27 +1,39 @@
-partial def Substring.spanWithout (substr: Substring) (pred: Char → Bool): Substring × Substring :=
-  let rec loop (i: String.Pos) :=
-    if substr.atEnd i then
-      (substr, substr.extract i i)
-    else
-      if pred $ substr.get i then
-        loop (substr.next i)
-      else
-        (substr.extract 0 i, substr.extract (substr.next i) substr.stopPos)
-  loop 0
+open Nat
 
-partial def String.spanWithout (str: String) (pred: Char → Bool): Substring × Substring :=
-  let rec loop (i: String.Pos) :=
-    match str.get? i with
-    | none =>
+def Substring.spanWithout (substr: Substring) (pred: Char → Bool): Substring × Substring :=
+  let rec loop (i: Nat): Substring × Substring :=
+    let pos := { byteIdx := i }
+    if h: i >= substr.bsize then
+      (substr, substr.extract pos pos)
+    else
+      if pred $ substr.get pos then
+        have : i < substr.bsize := by -- proof that this function will terminate
+          apply Nat.gt_of_not_le
+          apply h
+        loop (i + 1)
+      else
+        (substr.extract 0 pos, substr.extract (substr.next pos) substr.stopPos)
+  loop 0
+  termination_by loop i => substr.bsize - i
+
+def String.spanWithout (str: String) (pred: Char → Bool): Substring × Substring :=
+  let rec loop (i: Nat): Substring × Substring :=
+    if h: i >= str.length then
       let substr := str.toSubstring
       (substr, substr.extract str.endPos str.endPos)
-    | some c =>
-      if pred c then
-        loop (str.next i)
+    else
+      let pos := { byteIdx := i }
+      let char := str.get pos
+      if pred char then
+        have : i < str.length := by -- proof that this function will terminate
+          apply Nat.gt_of_not_le
+          apply h
+        loop (i + 1)
       else
         let substr := str.toSubstring
-        (substr.extract 0 i, substr.extract (str.next i) str.endPos)
+        (substr.extract 0 pos, substr.extract { byteIdx := i + 1 } str.endPos)
   loop 0
+  termination_by loop i => str.length - i
 
 structure RawReveal where
   red : Nat := 0
