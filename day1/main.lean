@@ -72,7 +72,7 @@ def handleIO (fn: String → Nat) (acc: Nat) (exitCode: UInt32) (args: List Stri
       handleIO fn acc' exitCode args
 
 def main : List String → IO UInt32
-  | [] => pure 1
+  | [] => handleIO (getCalibration getParsedDigit) 0 0 ["-"]
   | version :: args =>
     let args' := match args with
     | [] => ["-"]
