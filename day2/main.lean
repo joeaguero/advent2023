@@ -31,7 +31,7 @@ def String.spanWithout (str: String) (pred: Char → Bool): Substring × Substri
         loop (i + 1)
       else
         let substr := str.toSubstring
-        (substr.extract 0 pos, substr.extract { byteIdx := i + 1 } str.endPos)
+        (substr.extract 0 pos, substr.extract (str.next pos) str.endPos)
   loop 0
   termination_by loop i => str.length - i
 
