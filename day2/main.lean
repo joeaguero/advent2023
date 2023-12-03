@@ -1,7 +1,7 @@
 partial def Substring.spanWithout (substr: Substring) (pred: Char → Bool): Substring × Substring :=
   let rec loop (i: String.Pos) :=
     if substr.atEnd i then
-      (substr, substr.extract substr.stopPos substr.stopPos)
+      (substr, substr.extract i i)
     else
       if pred $ substr.get i then
         loop (substr.next i)
