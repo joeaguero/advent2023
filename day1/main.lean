@@ -6,7 +6,9 @@ def List.duplicate {α: Type u} : List α → List (List α)
 
 def getDigit : List Char → Option Char
   | [] => none
-  | c :: cs => if c.isDigit then some c else getDigit cs
+  | c :: cs => do
+    if c.isDigit then return c
+    getDigit cs
 
 def getParsedDigit : List Char → Option Char
   | [] => none
@@ -20,13 +22,15 @@ def getParsedDigit : List Char → Option Char
   | 's' :: 'e' :: 'v' :: 'e' :: 'n' :: _ => some '7'
   | 'e' :: 'i' :: 'g' :: 'h' :: 't' :: _ => some '8'
   | 'n' :: 'i' :: 'n' :: 'e' :: _ => some '9'
-  | c :: cs => if c.isDigit then some c else getParsedDigit cs
+  | c :: cs => do
+    if c.isDigit then return c
+    getParsedDigit cs
 
-def getFirst {α: Type u} (fn: List Char → Option α) (lists: List (List Char)) : Option α :=
+def getFirst {α: Type u} (fn: List Char → Option α) (lists: List (List Char)) : Option α := do
   match lists with
-  | [] => none
+  | [] => failure
   | cs :: css => match fn cs with
-    | some a => some a
+    | some a => return a
     | none => getFirst fn css
 
 def getCalibration? (fn: List Char → Option Char) (str: String) : Option Nat := do
@@ -40,19 +44,20 @@ def getCalibration (fn: List Char → Option Char) (str: String) : Nat :=
 
 partial def sumCalibrations (fn: String → Nat) (acc: Nat) (stream: IO.FS.Stream) : IO Nat := do
   let line ← stream.getLine
-  if line.isEmpty then pure acc else
-    let calibration := fn line
-    sumCalibrations fn (acc + calibration) stream
+  if line.isEmpty then return acc
+  let calibration := fn line
+  sumCalibrations fn (acc + calibration) stream
 
 def fileStream (filename: System.FilePath) : IO (Option IO.FS.Stream) := do
   let fileExists ← filename.pathExists
+
   if not fileExists then
     let stderr ← IO.getStderr
     stderr.putStrLn s!"File not found {filename}"
-    pure none
-  else
-    let handle ← IO.FS.Handle.mk filename IO.FS.Mode.read
-    pure $ some $ IO.FS.Stream.ofHandle handle
+    return none
+
+  let handle ← IO.FS.Handle.mk filename IO.FS.Mode.read
+  return some $ IO.FS.Stream.ofHandle handle
 
 def handleIO (fn: String → Nat) (acc: Nat) (exitCode: UInt32) (args: List String) : IO UInt32 := do
   match args with
